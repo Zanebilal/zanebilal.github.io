@@ -2,7 +2,7 @@
 title: "Mobile-Hacking-Lab : 'Guess Me' mobile challenge  "
 date: 2026-09-27 13:22:00 +0000
 categories: [Writeups, mobile]
-tags: [jadex, android-pentesting,mobile-application, CTF , js interface, deep link vulnerability, RCE]
+tags: [jadex, android-pentesting,mobile-application, CTF , js interface, deep link vulnerability, RCE, java javascript brigde]
 description: "An easy mobile challenge from Mobile Hacking Lab introducing how to exploit a deep link vulnerability and get an RCE"
 image:
   path: /assets/images/writeups/mobile/Guess-Me/guess-me-logo.png
