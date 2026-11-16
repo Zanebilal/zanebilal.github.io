@@ -108,7 +108,7 @@ int main(int argc, char* argv[]) {
      * - 0: Output buffer size is zero.
      * - NULL: No variable to store bytes returned.
      * - NULL: No OVERLAPPED structure.
-     */
+
     if (!DeviceIoControl(deviceHandle, ioctlCode, &pid, sizeof(pid), NULL, 0, NULL, NULL)) {
         printf("Failed to send IOCTL request. Error code: %d\n", GetLastError());
     }
