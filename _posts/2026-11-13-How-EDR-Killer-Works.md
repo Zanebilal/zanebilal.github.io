@@ -5,7 +5,7 @@ categories: [Red Team, EDR , Red Team , Evasion]
 tags: [process, windows-internals, malware-analysis,malware-dev, EDR, kernel , evasion,]
 description: "one way shot used by hacker to avoid edr detection is to kill them right a way without thinking on new evasion techniques, this way the deployed malware will move freely in the system without detection because there is now guard , no detection , no monitor that can stop it "
 image:
-  path: 
+  path: /assets/images/edr/edr-killer/foreground-image.png
   alt: ""
 ---
 ---
