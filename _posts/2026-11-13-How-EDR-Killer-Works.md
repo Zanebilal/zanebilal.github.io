@@ -10,7 +10,7 @@ image:
 ---
 ---
 
->Hi, I'm **Zane Bilal** — a computer science student and explorer of the offensive side of cybersecurity. In the world of malware and low-level programming, understanding *how things are built* is non-negotiable. to see my work explore my github and my other posts below 
+>Hi, I'm **Zane Bilal** — a cybersecurity student and explorer of the offensive side of cybersecurity. diving deep in the world of malware and low-level programming, understanding *how things are built* , how operating systems are designed is a habit for me . to see my work explore my github and my other posts below 
 
 >> `Disclamer:` what you learn from this blog and how you use the knowledge gained from it is up to you , i am not responsible from any misuse of the code in this blog , just use it for educational purposes
 
